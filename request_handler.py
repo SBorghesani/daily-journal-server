@@ -1,6 +1,6 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from entries import get_all_entries, get_single_entry
+from entries import get_all_entries, get_single_entry, delete_entry, search_entries
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
@@ -8,16 +8,27 @@ class HandleRequests(BaseHTTPRequestHandler):
     def parse_url(self, path):
         path_params = path.split("/")
         resource = path_params[1]
-        id = None
 
-        try:
-            id = int(path_params[2])
-        except IndexError:
-            pass  # No route parameter exists: /animals
-        except ValueError:
-            pass  # Request had trailing slash: /animals/
+        if "?" in resource:
+            param = resource.split("?")[1]
+            resource = resource.split("?")[0]
+            pair = param.split("=")
+            key = pair[0]
+            value = pair[1]
 
-        return (resource, id)  
+            return (resource, key, value)
+
+        else:
+            id = None
+
+            try:
+                id = int(path_params[2])
+            except IndexError:
+                pass  # No route parameter exists: /animals
+            except ValueError:
+                pass  # Request had trailing slash: /animals/
+
+            return (resource, id)  
 
     def _set_headers(self, status):
         """Sets the status code, Content-Type and Access-Control-Allow-Origin
@@ -42,19 +53,31 @@ class HandleRequests(BaseHTTPRequestHandler):
     def do_GET(self):
         self._set_headers(200)
         response = {}  # Default response
+        parsed = self.parse_url(self.path)
+        if len(parsed) == 2:
+            (resource, id) = parsed
 
-        # Parse the URL and capture the tuple that is returned
+            if resource == "entries":
+                if id is not None:
+                    response = f"{get_single_entry(id)}"
+
+                else:
+                    response = f"{get_all_entries()}"
+        elif len(parsed) == 3:
+            (resource, key, value) = parsed
+
+            if key == "q" and resource == "entries":
+                response = search_entries(value)
+        self.wfile.write(response.encode())
+
+    def do_DELETE(self):
+        self._set_headers(204)
+
         (resource, id) = self.parse_url(self.path)
 
         if resource == "entries":
-            if id is not None:
-                response = f"{get_single_entry(id)}"
-
-            else:
-                response = f"{get_all_entries()}"
-
-        self.wfile.write(response.encode())
-
+            delete_entry(id)
+            self.wfile.write("".encode())
 
 def main():
     """Starts the server on port 8088 using the HandleRequests class

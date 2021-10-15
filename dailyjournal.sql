@@ -29,4 +29,7 @@ INSERT INTO `Moods` VALUES (null, "Sad");
 INSERT INTO `Moods` VALUES (null, "Angry");
 INSERT INTO `Moods` VALUES (null, "Ok");
 
-SELECT * FROM Entries
+SELECT *, Entries.id FROM Entries
+INNER JOIN Moods
+	ON Entries.mood_id = Moods.id
+
