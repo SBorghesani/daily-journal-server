@@ -1,6 +1,7 @@
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from entries import get_all_entries, get_single_entry, delete_entry, search_entries
+from moods import get_all_moods, get_single_mood
+from entries import get_all_entries, get_single_entry, delete_entry, search_entries, create_journal_entry
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
@@ -63,6 +64,14 @@ class HandleRequests(BaseHTTPRequestHandler):
 
                 else:
                     response = f"{get_all_entries()}"
+
+            if resource == "moods":
+                if id is not None:
+                    response = f'{get_single_mood(id)}'
+
+                else: 
+                    response = f'{get_all_moods()}'
+
         elif len(parsed) == 3:
             (resource, key, value) = parsed
 
@@ -78,6 +87,21 @@ class HandleRequests(BaseHTTPRequestHandler):
         if resource == "entries":
             delete_entry(id)
             self.wfile.write("".encode())
+
+    def do_POST(self):
+        self._set_headers(201)
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+
+        post_body = json.loads(post_body)
+
+        (resource, id) = self.parse_url(self.path)
+
+        new_entry = None
+
+        if resource == "entries":
+            new_entry = create_journal_entry(post_body)
+            self.wfile.write(f"{new_entry}".encode())
 
 def main():
     """Starts the server on port 8088 using the HandleRequests class

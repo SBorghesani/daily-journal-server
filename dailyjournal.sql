@@ -9,7 +9,7 @@ CREATE TABLE `Entries` (
 
 CREATE TABLE `Moods` (
     `id`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    `LABEL`    TEXT NOT NULL
+    `mood`    TEXT NOT NULL
 );
 
 INSERT INTO `Entries` VALUES (null, 'Javascript', 
@@ -29,7 +29,5 @@ INSERT INTO `Moods` VALUES (null, "Sad");
 INSERT INTO `Moods` VALUES (null, "Angry");
 INSERT INTO `Moods` VALUES (null, "Ok");
 
-SELECT *, Entries.id FROM Entries
-INNER JOIN Moods
-	ON Entries.mood_id = Moods.id
+SELECT * FROM Entries
 
