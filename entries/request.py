@@ -115,6 +115,31 @@ def create_journal_entry(new_entry):
         # was sent by the client so that the client sees the
         # primary key in the response.
         new_entry['id'] = id
-
-
     return json.dumps(new_entry)
+
+def update_entry(id, new_entry):
+    with sqlite3.connect("./somethingelse.db") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Entries
+            SET
+                concept = ?,
+                entry = ?,
+                mood_id = ?,
+                date = ?
+        WHERE id = ?
+        """, (new_entry['concept'], new_entry['entry'],
+                new_entry['moodId'], new_entry['date'], id, ))
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        # Forces 404 response by main module
+        return False
+    else:
+        # Forces 204 response by main module
+        return True
+

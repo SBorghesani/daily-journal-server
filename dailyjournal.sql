@@ -7,10 +7,36 @@ CREATE TABLE `Entries` (
     FOREIGN KEY (`mood_id`) REFERENCES `Moods`(`id`)
 );
 
+
 CREATE TABLE `Moods` (
     `id`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     `mood`    TEXT NOT NULL
 );
+
+CREATE TABLE 'Tags' (
+	'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	'name' TEXT NOT NULL
+);
+
+DROP TABLE 'Entry-tags';
+
+CREATE TABLE 'Entry_tags' (
+	'id' INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	'entry_id' INTEGER NOT NULL,
+	'tag_id' INTEGER NOT NULL,
+	FOREIGN KEY ('entry_id') REFERENCES 'Entries'('id'),
+	FOREIGN KEY ('tag_id') REFERENCES 'Tags'('id')
+);
+
+ALTER TABLE 'Entries' ADD 'tag_ids' VARCHAR(20) ;
+
+INSERT INTO 'Tags' VALUES (null, 'JavaScript');
+INSERT INTO 'Tags' VALUES (null, 'Python');
+INSERT INTO 'Tags' VALUES (null, 'SQL');
+INSERT INTO 'Tags' VALUES (null, 'Django');
+INSERT INTO 'Tags' VALUES (null, 'HTML');
+INSERT INTO 'Tags' VALUES (null, 'CSS');
+
 
 INSERT INTO `Entries` VALUES (null, 'Javascript', 
 'I learned about loops today. They can be a lot of fun.\nI 
@@ -29,5 +55,8 @@ INSERT INTO `Moods` VALUES (null, "Sad");
 INSERT INTO `Moods` VALUES (null, "Angry");
 INSERT INTO `Moods` VALUES (null, "Ok");
 
-SELECT * FROM Entries
+SELECT * FROM Entries;
+SELECT * FROM tags;
+SELECT * FROM Entry_tags;
 
+ALTER TABLE Entries DROP COLUMN tag_ids;
