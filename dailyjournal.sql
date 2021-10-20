@@ -59,4 +59,28 @@ SELECT * FROM Entries;
 SELECT * FROM tags;
 SELECT * FROM Entry_tags;
 
-ALTER TABLE Entries DROP COLUMN tag_ids;
+SELECT
+	e.id,
+	e.concept,
+	e.entry,
+	e.mood_id,
+	e.date,
+	e.tag_ids,
+	m.id m_id,
+	m.mood,
+	t.id t_id,
+	t.name
+FROM entries e
+JOIN moods m
+	ON m.id = e.mood_id
+JOIN Entry_tags et ON e.id = et.entry_id
+JOIN Tags t ON t_id = et.tag_id
+WHERE e.id = 16;
+
+SELECT t.id, t.name
+FROM Entries e
+JOIN Entry_tags et on e.id = et.entry_id
+JOIN Tags t on t.id = et.tag_id
+WHERE e.id = 18;
+
+

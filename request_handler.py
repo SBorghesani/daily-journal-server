@@ -2,6 +2,8 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from moods import get_all_moods, get_single_mood
 from entries import get_all_entries, get_single_entry, delete_entry, search_entries, create_journal_entry, update_entry
+from entry_tags import get_all_entry_tags
+from tags import get_all_tags
 
 class HandleRequests(BaseHTTPRequestHandler):
     """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
@@ -71,6 +73,12 @@ class HandleRequests(BaseHTTPRequestHandler):
 
                 else: 
                     response = f'{get_all_moods()}'
+
+            if resource == "entry_tags":
+                response = f'{get_all_entry_tags()}'
+
+            if resource == 'tags':
+                response = f'{get_all_tags()}'
 
         elif len(parsed) == 3:
             (resource, key, value) = parsed

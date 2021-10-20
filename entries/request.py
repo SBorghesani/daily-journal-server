@@ -15,23 +15,37 @@ def get_all_entries():
             e.entry,
             e.mood_id,
             e.date,
+            e.tag_ids,
             m.id m_id,
             m.mood
         FROM entries e
         JOIN moods m
             ON m.id = e.mood_id
         """)
-        entries = []
         dataset = db_cursor.fetchall()
+        entries = []
+
         for row in dataset:
             entry = Entry(row['id'], row['concept'], row['entry'], row['mood_id'],
-                            row['date'])
+                            row['date'], row['tag_ids'])
             mood = Mood(row['m_id'], row['mood'])
-
             entry.mood = mood.__dict__
             entries.append(entry.__dict__)
 
-    return json.dumps(entries)
+
+            db_cursor.execute("""
+            SELECT t.id, t.name
+            FROM Entries e
+            JOIN Entry_tags et on e.id = et.entry_id
+            JOIN Tags t on t.id = et.tag_id
+            WHERE e.id = ?
+            """, (entry.id,))
+
+            tag_set = db_cursor.fetchall()
+            for tag_data in tag_set:
+                tag = {'id': tag_data['id'], 'name': tag_data['name']}
+                entry.tag_ids.append(tag)
+        return json.dumps(entries)
 
 def get_single_entry(id):
     with sqlite3.connect("./somethingelse.db") as conn:
@@ -45,6 +59,7 @@ def get_single_entry(id):
             e.entry,
             e.mood_id,
             e.date,
+            e.tag_ids,
             m.id m_id,
             m.mood
         FROM entries e
@@ -57,7 +72,7 @@ def get_single_entry(id):
 
 
         entry = Entry(data['id'], data['concept'], data['entry'],
-        data['mood_id'], data['date'])
+        data['mood_id'], data['date'], data['tag_ids'])
         mood = Mood(data['m_id'], data['mood'])
         entry.mood = mood.__dict__
 
@@ -83,7 +98,8 @@ def search_entries(search_value):
             a.concept,
             a.entry,
             a.mood_id,
-            a.date
+            a.date,
+            a.tag_ids
         FROM entries a
         WHERE a.entry LIKE ? 
             OR a.concept LIKE ?
@@ -92,7 +108,7 @@ def search_entries(search_value):
         dataset = db_cursor.fetchall()
         for row in dataset:
             entry = Entry(row['id'], row['concept'], row['entry'], row['mood_id'],
-                            row['date'])
+                            row['date'], row['tag_ids'])
             entries.append(entry.__dict__)
 
     return json.dumps(entries)
@@ -111,11 +127,14 @@ def create_journal_entry(new_entry):
 
         id = db_cursor.lastrowid
 
-        # Add the `id` property to the animal dictionary that
-        # was sent by the client so that the client sees the
-        # primary key in the response.
         new_entry['id'] = id
-    return json.dumps(new_entry)
+
+        for tag in new_entry['tag_ids']:
+            db_cursor.execute("""
+            INSERT INTO Entry_tags(entry_id, tag_id)
+            VALUES (?,?)
+            """, (id, tag))
+        return json.dumps(new_entry)
 
 def update_entry(id, new_entry):
     with sqlite3.connect("./somethingelse.db") as conn:
@@ -127,10 +146,11 @@ def update_entry(id, new_entry):
                 concept = ?,
                 entry = ?,
                 mood_id = ?,
-                date = ?
+                date = ?,
+                tag_ids = ?
         WHERE id = ?
         """, (new_entry['concept'], new_entry['entry'],
-                new_entry['moodId'], new_entry['date'], id, ))
+                new_entry['moodId'], new_entry['date'], new_entry['tag_ids'], id, ))
 
         # Were any rows affected?
         # Did the client send an `id` that exists?
